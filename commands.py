@@ -2,7 +2,10 @@ import json
 import logging
 from io import BytesIO
 from typing import Optional
+
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def start(update, context):
@@ -31,7 +34,9 @@ def _unpack_telegram_document(update) -> dict:
 
 def _form_data_frame_from_json(chat_json) -> Optional[pd.DataFrame]:
     try:
-        messages_df = pd.DataFrame(chat_json['messages'])
+        messages_df = pd.DataFrame(
+            chat_json['messages'],
+            columns=['id', 'type', 'date', 'from', 'text'])
     except KeyError:
         logging.getLogger().error(
             msg=f'Unable to form DataFrame from json. '
@@ -39,7 +44,23 @@ def _form_data_frame_from_json(chat_json) -> Optional[pd.DataFrame]:
         )
         return None
     else:
+        messages_df.set_index('id', inplace=True)
+        messages_df['date'] = pd.to_datetime(messages_df['date'])
         return messages_df
+
+
+def _make_plot(messages_df: pd.DataFrame):
+    messages_per_month = messages_df['date'].groupby(messages_df['date'].dt.to_period('M')).agg('count')
+    p = sns.barplot(
+        x=messages_per_month.index,
+        y=messages_per_month.values,
+        color=(0.44, 0.35, 0.95)
+    )
+    plt.xticks(rotation=45)
+    plt.title('Total messeges in each month')
+    buffer = BytesIO()
+    p.figure.savefig(buffer)
+    return buffer
 
 
 def analyze_history(update, context):
@@ -50,6 +71,8 @@ def analyze_history(update, context):
     logger.info('History Analyse function called', )
     chat_json = _unpack_telegram_document(update)
     messages_df = _form_data_frame_from_json(chat_json)
-    message = messages_df.head() if messages_df is not None else ''
-    
-    update.message.reply_text(text=f'Response: {message}')
+    buffer_with_img = _make_plot(messages_df)
+    # message = messages_df.head() if messages_df is not None else ''
+    # update.message.reply_text(text=f'Response: {message}')
+    update.message.reply_photo(photo=buffer_with_img.getvalue())
+    buffer_with_img.close()
