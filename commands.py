@@ -1,6 +1,6 @@
 import logging
 
-from .utils import (
+from utils import (
     _form_data_frame_from_json,
     _unpack_telegram_document,
     make_plots

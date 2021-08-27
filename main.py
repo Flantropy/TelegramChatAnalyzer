@@ -7,7 +7,7 @@ from telegram.ext import (
     Filters,
     Dispatcher
 )
-from bot.commands import (
+from commands import (
     start,
     echo,
     analyze_history,
