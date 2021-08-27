@@ -13,6 +13,7 @@ from telegram import InputMediaPhoto
 def __convert_plot_to_telegram_photo(plot) -> InputMediaPhoto:
     with BytesIO() as buffer:
         plot.figure.savefig(buffer)
+        plot.clear()
         photo = InputMediaPhoto(buffer.getvalue())
     return photo
 
@@ -64,7 +65,6 @@ def _make_barplot(messages_df: pd.DataFrame) -> InputMediaPhoto:
 
 
 def _make_kde_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
-    plt.close()
     plot = sns.kdeplot(
         x=messages_df['date'],
         hue=messages_df['from'],
@@ -77,10 +77,9 @@ def _make_kde_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
 
 
 def _make_media_distribution_bar_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
-    plt.close()
-    sns.set_theme(context='paper')
-    r = messages_df[['from', 'media_type']].value_counts()
-    media_dist_plot = r.unstack().plot(
+    media_dist_df = messages_df[['from', 'media_type']].value_counts()
+    logging.getLogger().info('Enter media dist function')
+    media_dist_plot = media_dist_df.unstack().plot(
         kind='bar',
         stacked=True,
         ylabel='Media messages',
@@ -91,9 +90,26 @@ def _make_media_distribution_bar_plot(messages_df: pd.DataFrame) -> InputMediaPh
     return __convert_plot_to_telegram_photo(media_dist_plot)
 
 
+def _make_weekday_distribution_bar_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
+    dist_by_day_of_week = messages_df['from']\
+        .groupby(messages_df['date'].dt.weekday)\
+        .agg('value_counts')
+    plot = dist_by_day_of_week.unstack().plot(kind='bar')
+    plt.xlabel('')
+    plt.ylabel('Messages')
+    plt.xticks(
+        list(range(7)),
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        rotation=0
+    )
+    return __convert_plot_to_telegram_photo(plot)
+
+
 def make_plots(messages_df: pd.DataFrame) -> List[InputMediaPhoto]:
+    sns.set_theme(context='paper')
     return [
         _make_barplot(messages_df),
         _make_media_distribution_bar_plot(messages_df),
         _make_kde_plot(messages_df),
+        _make_weekday_distribution_bar_plot(messages_df),
     ]

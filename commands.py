@@ -29,5 +29,5 @@ def analyze_history(update, context):
     messages_df = _form_data_frame_from_json(chat_json)
     # messages_df can be None
     photos = make_plots(messages_df)
-    
+    logging.getLogger().info(f'{[type(i) for i in photos]}')
     update.message.reply_media_group(media=photos)
