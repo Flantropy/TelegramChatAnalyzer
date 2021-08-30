@@ -39,7 +39,7 @@ def _form_data_frame_from_json(chat_json) -> Optional[pd.DataFrame]:
             msg=f'Unable to form DataFrame from json. '
             f'Key "messages" not found. {e}'
         )
-        return None
+        return
     else:
         messages_df.set_index('id', inplace=True)
         messages_df['date'] = pd.to_datetime(messages_df['date'])
@@ -76,9 +76,11 @@ def _make_kde_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
     return __convert_plot_to_telegram_photo(plot)
 
 
-def _make_media_distribution_bar_plot(messages_df: pd.DataFrame) -> InputMediaPhoto:
-    media_dist_df = messages_df[['from', 'media_type']].value_counts()
+def _make_media_distribution_bar_plot(messages_df: pd.DataFrame) -> Optional[InputMediaPhoto]:
     logging.getLogger().info('Enter media dist function')
+    media_dist_df = messages_df[['from', 'media_type']].value_counts()
+    if media_dist_df.empty:
+        return
     media_dist_plot = media_dist_df.unstack().plot(
         kind='bar',
         stacked=True,
@@ -107,9 +109,10 @@ def _make_weekday_distribution_bar_plot(messages_df: pd.DataFrame) -> InputMedia
 
 def make_plots(messages_df: pd.DataFrame) -> List[InputMediaPhoto]:
     sns.set_theme(context='paper')
-    return [
+    photo_list = [
         _make_barplot(messages_df),
         _make_media_distribution_bar_plot(messages_df),
         _make_kde_plot(messages_df),
         _make_weekday_distribution_bar_plot(messages_df),
     ]
+    return [p for p in photo_list if p is not None]
