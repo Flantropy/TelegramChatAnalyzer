@@ -11,7 +11,7 @@ from commands import (
     start,
     echo,
     analyze_history,
-)
+    help_info)
 
 
 def main():
@@ -32,6 +32,7 @@ def main():
     
     # Creating handlers
     start_handler = CommandHandler('start', start)
+    help_handler = CommandHandler('help', help_info)
     echo_handler = MessageHandler(Filters.text & (~Filters.command), echo)
     analyze_history_handler = MessageHandler(file_extension_filter, analyze_history)
 
@@ -39,6 +40,7 @@ def main():
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(echo_handler)
     dispatcher.add_handler(analyze_history_handler)
+    dispatcher.add_handler(help_handler)
     
     # Starts polling to telegram for updates
     updater.start_polling(poll_interval=5)

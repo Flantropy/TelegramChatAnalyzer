@@ -1,5 +1,6 @@
 import logging
 
+from doc import HELP_INFO
 from utils import (
     _form_data_frame_from_json,
     _unpack_telegram_document,
@@ -18,6 +19,10 @@ def echo(update, context):
     # with open('C:\\Users\\User\\PycharmProjects\\TelegramChatAnalyzer\\bot\\my_image.jpg', 'rb') as image:
     #     update.message.reply_photo(photo=image.read())
     update.message.reply_text(text=update.message.text)
+
+
+def help_info(update, context):
+    update.message.reply_text(text=HELP_INFO)
 
 
 def analyze_history(update, context):
