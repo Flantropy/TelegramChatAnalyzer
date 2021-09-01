@@ -1,8 +1,8 @@
 import logging
 
-from doc import HELP_INFO
+from src.doc import HELP_INFO
 from telegram.constants import PARSEMODE_HTML
-from utils import (
+from src.utils import (
     _form_data_frame_from_json,
     _unpack_telegram_document,
     make_plots
@@ -19,8 +19,7 @@ def start(update, context):
 def help_info(update, context):
     update.message.reply_text(
         text=HELP_INFO,
-        parse_mode=PARSEMODE_HTML,
-        
+        parse_mode=PARSEMODE_HTML
     )
     
 
