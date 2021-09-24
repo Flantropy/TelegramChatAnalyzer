@@ -4,6 +4,8 @@ from telegram.ext import (
     Updater,
     CommandHandler,
     MessageHandler,
+    ShippingQueryHandler,
+    PreCheckoutQueryHandler,
     Filters,
     Dispatcher
 )
@@ -11,6 +13,11 @@ from src.commands import (
     start,
     help_info,
     analyze_history,
+    shipping_callback,
+    start_shipping_callback,
+    start_noshipping_callback,
+    pre_checkout_callback,
+    successful_payment,
 )
 
 
@@ -34,11 +41,16 @@ def main():
     start_handler = CommandHandler('start', start)
     help_handler = CommandHandler('help', help_info)
     analyze_history_handler = MessageHandler(file_extension_filter, analyze_history)
-
+    shipping_handler = CommandHandler('shipping', start_shipping_callback)
+    noshipping_handler = CommandHandler('noshipping', start_noshipping_callback)
+    
+    
     # Adding handlers
     dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(analyze_history_handler)
     dispatcher.add_handler(help_handler)
+    dispatcher.add_handler(analyze_history_handler)
+    dispatcher.add_handler(send_invoice_handler)
+    dispatcher.add_handler()
     
     # Starts polling to telegram for updates
     updater.start_polling(poll_interval=5)
