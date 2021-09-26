@@ -1,23 +1,11 @@
-import os
 import logging
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    MessageHandler,
-    ShippingQueryHandler,
-    PreCheckoutQueryHandler,
-    Filters,
-    Dispatcher
-)
+import os
+
+import telegram.ext as tg
+
 from src.commands import (
-    start,
-    help_info,
-    analyze_history,
-    shipping_callback,
-    start_shipping_callback,
-    start_noshipping_callback,
-    pre_checkout_callback,
-    successful_payment,
+    analyze_history, help_info, pre_checkout_callback, shipping_callback, start,
+    start_noshipping_callback, start_shipping_callback, successful_payment,
 )
 
 
@@ -31,31 +19,32 @@ def main():
     logger.setLevel(logging.INFO)
     
     # Creating updater and dispatcher for bot
-    updater = Updater(token=os.getenv('BOT_TOKEN'))
-    dispatcher: Dispatcher = updater.dispatcher
+    updater = tg.Updater(token=os.getenv('BOT_TOKEN'))
+    dispatcher: tg.Dispatcher = updater.dispatcher
     
     # Filters
-    file_extension_filter = Filters.document.file_extension('json')
+    json_only_filter = tg.Filters.document.file_extension('json')
     
     # Creating handlers
-    start_handler = CommandHandler('start', start)
-    help_handler = CommandHandler('help', help_info)
-    analyze_history_handler = MessageHandler(file_extension_filter, analyze_history)
-    shipping_handler = CommandHandler('shipping', start_shipping_callback)
-    noshipping_handler = CommandHandler('noshipping', start_noshipping_callback)
-    
+    handlers = [
+        tg.CommandHandler('start', start),
+        tg.CommandHandler('help', help_info),
+        tg.CommandHandler('shipping', start_shipping_callback),
+        tg.CommandHandler('noshipping', start_noshipping_callback),
+        tg.PreCheckoutQueryHandler(pre_checkout_callback),
+        tg.ShippingQueryHandler(shipping_callback),
+        tg.MessageHandler(json_only_filter, analyze_history),
+        tg.MessageHandler(tg.Filters.successful_payment, successful_payment),
+    ]
     
     # Adding handlers
-    dispatcher.add_handler(start_handler)
-    dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(analyze_history_handler)
-    dispatcher.add_handler(send_invoice_handler)
-    dispatcher.add_handler()
+    for handler in handlers:
+        dispatcher.add_handler(handler)
     
-    # Starts polling to telegram for updates
+    # Start polling for updates
     updater.start_polling(poll_interval=5)
     updater.idle()
-    
+
 
 if __name__ == '__main__':
     main()

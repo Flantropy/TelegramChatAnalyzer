@@ -1,4 +1,5 @@
 import logging
+import os
 
 from telegram import LabeledPrice, ShippingOption, Update
 from telegram.constants import PARSEMODE_HTML
@@ -30,7 +31,6 @@ def analyze_history(update, context):
     """
     This function
     """
-    logging.getLogger().info('History Analyse function called')
     chat_json = _unpack_telegram_document(update)
     messages_df = _form_data_frame_from_json(chat_json)
     if messages_df is None:
@@ -42,12 +42,12 @@ def analyze_history(update, context):
 
 def start_shipping_callback(update: Update, context: CallbackContext):
     update.message.reply_invoice(
-        title='Invoce title',
-        description='Invoce description',
-        payload='My Payload',
-        provider_token='r2e00dV1T',
-        currency='USD',
-        prices=[LabeledPrice('Test', 100)],
+        title='Some gifts',
+        description='We need your address',
+        payload='UKASSA',
+        provider_token=os.getenv('UKASSA_TEST_TOKEN'),
+        currency='RUB',
+        prices=[LabeledPrice('Test', 100*100)],
         need_phone_number=True,
         need_email=True,
         need_shipping_address=True,
@@ -57,18 +57,19 @@ def start_shipping_callback(update: Update, context: CallbackContext):
 
 def start_noshipping_callback(update: Update, context: CallbackContext):
     update.message.reply_invoice(
-        title='Invoice title',
-        description='Invoice description',
-        payload='My Payload',
-        provider_token='r2e00dV1T',
-        currency='USD',
-        prices=[LabeledPrice('Test', 100)],
+        title='Premium status',
+        description='One month of premium access',
+        payload='UKASSA',
+        provider_token=os.getenv('UKASSA_TEST_TOKEN'),
+        currency='RUB',
+        prices=[LabeledPrice('Test', 100*100)],
+        need_email=True,
     )
 
 
 def shipping_callback(update: Update, context: CallbackContext) -> None:
     query = update.shipping_query
-    if query.invoice_payload != 'My Payload':
+    if query.invoice_payload != 'UKASSA':
         query.answer(ok=False, error_message='Something went wrong')
         return
     
@@ -81,13 +82,10 @@ def shipping_callback(update: Update, context: CallbackContext) -> None:
 
 def pre_checkout_callback(update: Update, context: CallbackContext) -> None:
     query = update.pre_checkout_query
-    params = dict(ok=True) if query.invoice_payload != 'My Payload' \
-        else dict(ok=True, error_message='Something went wrong')
-    
+    params = dict(ok=True) if query.invoice_payload == 'UKASSA'\
+        else dict(ok=False, error_message='Something went wrong!')
     query.answer(**params)
-    # query.answer(ok=True) if query.invoice_payload != 'My Payload'\
-    #     else query.answer(ok=False, error_message='Something went wrong')
-
+    
 
 def successful_payment(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Thank you for your payment')
