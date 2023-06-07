@@ -72,11 +72,11 @@ def shipping_callback(update: Update, context: CallbackContext) -> None:
     if query.invoice_payload != 'UKASSA':
         query.answer(ok=False, error_message='Something went wrong')
         return
-    
+
     options = [ShippingOption('1', 'Option A', [LabeledPrice('A', 100)])]
     price_list = [LabeledPrice('B1', 150), LabeledPrice('B2', 200)]
     options.append(ShippingOption('2', 'Option B', price_list))
-    
+
     query.answer(ok=True, shipping_options=options)
 
 
@@ -85,7 +85,7 @@ def pre_checkout_callback(update: Update, context: CallbackContext) -> None:
     params = dict(ok=True) if query.invoice_payload == 'UKASSA'\
         else dict(ok=False, error_message='Something went wrong!')
     query.answer(**params)
-    
+
 
 def successful_payment(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Thank you for your payment')
